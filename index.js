@@ -1,19 +1,28 @@
+import { GoogleAuth } from 'google-auth-library';
 import { OpenClaw } from 'openclaw';
 
-// Inisialisasi OpenClaw Agent
+// Inisialisasi Auth via OAuth 2.0 Token
+const auth = new GoogleAuth({
+  credentials: {
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+  },
+  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
+
 const agent = new OpenClaw({
-  apiKey: process.env.GEMINI_API_KEY,
+  authClient: auth,
 });
 
 async function main() {
-  console.log("OpenClaw Agent sedang berjalan di Railway...");
+  console.log("OpenClaw Agent berhasil aktif di Railway!");
   
-  // Contoh testing respons agen
   try {
-    const response = await agent.chat("Halo OpenClaw, sistem sudah siap!");
+    const response = await agent.chat("Halo OpenClaw, sistem siap digunakan.");
     console.log("Response Agent:", response);
   } catch (error) {
-    console.error("Gagal menjalankan agent:", error);
+    console.error("Error eksekusi agent:", error);
   }
 }
 
