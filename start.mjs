@@ -1,5 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 
+// Inisialisasi Auth Client OAuth 2.0
 const auth = new GoogleAuth({
   credentials: {
     client_id: process.env.GOOGLE_CLIENT_ID,
@@ -10,22 +11,28 @@ const auth = new GoogleAuth({
 });
 
 async function main() {
-  console.log("Menjalankan OpenClaw Agent via start.mjs...");
+  console.log("🚀 Menjalankan OpenClaw Agent di Railway...");
 
   try {
     const openclaw = await import('openclaw');
-    console.log("Modul OpenClaw berhasil dimuat!");
+    
+    // Verifikasi token OAuth sebelum menjalankan CLI/gateway
+    const client = await auth.getClient();
+    const token = await client.getAccessToken();
+    console.log("✅ Authenticated via Google OAuth 2.0 successfully!");
 
-    const AgentClass = openclaw.OpenClaw || openclaw.default || openclaw.Agent || openclaw;
-
-    if (typeof AgentClass === 'function') {
-      const agent = new AgentClass({ authClient: auth });
-      console.log("OpenClaw Agent berhasil diinisialisasi via OAuth 2.0!");
+    // Eksekusi entry point utama OpenClaw
+    if (typeof openclaw.runLegacyCliEntry === 'function') {
+      console.log("🤖 Starting OpenClaw Service...");
+      await openclaw.runLegacyCliEntry();
+    } else if (typeof openclaw.waitForever === 'function') {
+      console.log("🤖 OpenClaw running in background mode...");
+      await openclaw.waitForever();
     } else {
-      console.log("Komponen OpenClaw terdeteksi:", Object.keys(openclaw));
+      console.log(" Ready.");
     }
   } catch (error) {
-    console.error("Error eksekusi agent:", error);
+    console.error("❌ Error running OpenClaw Agent:", error);
   }
 }
 
