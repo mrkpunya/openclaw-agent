@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi OAuth 2.0 Client
+// 1. Inisialisasi Client OAuth 2.0
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -18,7 +18,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service (Direct CLI Mode)...");
 
   try {
-    // 2. Refresh Token dari Google OAuth 2.0
+    // 2. Dapatkan Access Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -27,7 +27,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable
+    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -37,7 +37,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Inisialisasi file konfigurasi minimal (~/.openclaw/config.json)
+    // 4. Inisialisasi folder & file konfigurasi minimal (~/.openclaw/config.json)
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -57,8 +57,8 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Jalankan Biner CLI OpenClaw secara synchronous (Menghindari import openclaw SDK)
-    console.log("⚡ Executing OpenClaw Gateway...");
+    // 5. Eksekusi Biner CLI Secara Synchronous (Bypassing SDK & monitorWebChannel)
+    console.log("⚡ Executing OpenClaw Gateway Process...");
     
     execSync('npx openclaw gateway run --non-interactive --accept-risk', {
       stdio: 'inherit',
