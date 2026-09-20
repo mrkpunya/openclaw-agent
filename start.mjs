@@ -1,10 +1,10 @@
 import { OAuth2Client } from 'google-auth-library';
-import { spawn } from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi Client OAuth 2.0
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,10 +15,10 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🚀 Memulai OpenClaw Agent Service (Mode Direct Subprocess)...");
+  console.log("🚀 Memulai OpenClaw Agent Service (Direct CLI Mode)...");
 
   try {
-    // 2. Dapatkan Access Token dari OAuth 2.0
+    // 2. Refresh Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -37,7 +37,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Buat folder & file konfigurasi minimal untuk bypass onboarding TTY
+    // 4. Inisialisasi file konfigurasi minimal (~/.openclaw/config.json)
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -57,20 +57,12 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi biner CLI OpenClaw secara langsung via Subprocess (Bypass monitorWebChannel)
-    console.log("⚡ Executing OpenClaw Gateway Process...");
+    // 5. Jalankan Biner CLI OpenClaw secara synchronous (Menghindari import openclaw SDK)
+    console.log("⚡ Executing OpenClaw Gateway...");
     
-    const openclawProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--non-interactive', '--accept-risk'], {
+    execSync('npx openclaw gateway run --non-interactive --accept-risk', {
       stdio: 'inherit',
       env: process.env
-    });
-
-    openclawProcess.on('error', (err) => {
-      console.error("❌ Failed to start OpenClaw process:", err);
-    });
-
-    openclawProcess.on('exit', (code) => {
-      console.log(`⚠️ OpenClaw process exited with code ${code}`);
     });
 
   } catch (error) {
