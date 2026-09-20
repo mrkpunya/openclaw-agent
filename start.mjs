@@ -1,13 +1,14 @@
-import { GoogleAuth } from 'google-auth-library';
+import { OAuth2Client } from 'google-auth-library';
 
-// Inisialisasi Auth Client Google OAuth 2.0
-const auth = new GoogleAuth({
-  credentials: {
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-  },
-  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+// Inisialisasi Client OAuth 2.0
+const oauth2Client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET
+);
+
+// Pasang Refresh Token
+oauth2Client.setCredentials({
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 });
 
 async function main() {
@@ -16,12 +17,13 @@ async function main() {
   try {
     const openclaw = await import('openclaw');
     
-    // Verifikasi Token Google
-    const client = await auth.getClient();
-    await client.getAccessToken();
-    console.log("✅ Google OAuth 2.0 Authenticated!");
+    // Verifikasi Token Google OAuth 2.0
+    const tokenResponse = await oauth2Client.getAccessToken();
+    if (tokenResponse.token) {
+      console.log("✅ Google OAuth 2.0 Authenticated successfully!");
+    }
 
-    // Cek ketersediaan Token Telegram
+    // Cek Token Telegram
     if (!process.env.TELEGRAM_BOT_TOKEN) {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     } else {
