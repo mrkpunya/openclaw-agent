@@ -14,7 +14,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Refresh Access Token
+    // 2. Dapatkan Access Token dari OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -23,33 +23,33 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Set Environment Variable
+    // 3. Inject Token ke Environment Variable
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
     if (process.env.TELEGRAM_BOT_TOKEN) {
       console.log("🤖 Menghubungkan Gateway ke Telegram Bot...");
+    } else {
+      console.warn("⚠️ TELEGRAM_BOT_TOKEN belum terdeteksi di Railway Variables.");
     }
 
-    // 4. Load OpenClaw
+    // 4. Force Process Arguments agar OpenClaw berjalan mode non-interaktif
+    process.argv = [
+      process.argv[0],
+      process.argv[1],
+      'onboard',
+      '--non-interactive',
+      '--accept-risk'
+    ];
+
+    // 5. Load OpenClaw
     const openclaw = await import('openclaw');
 
-    // 5. Jalankan onboarding otomatis tanpa TTY interaktif jika fungsi eksekusi perintah tersedia
-    if (typeof openclaw.runExec === 'function') {
-      console.log("⚡ Menjalankan Onboarding Non-Interactive...");
-      await openclaw.runExec('openclaw', ['onboard', '--non-interactive', '--accept-risk']);
-    } else if (typeof openclaw.runCommandWithTimeout === 'function') {
-      console.log("⚡ Menjalankan Onboarding Non-Interactive...");
-      await openclaw.runCommandWithTimeout(['onboard', '--non-interactive', '--accept-risk']);
-    }
-
-    // 6. Jalankan Service Utama / Listening Mode
-    if (typeof openclaw.waitForever === 'function') {
-      await openclaw.waitForever();
-    } else if (typeof openclaw.runLegacyCliEntry === 'function') {
-      // Mengoper argumen non-interaktif ke CLI entry
-      process.argv = ['node', 'start.mjs', 'onboard', '--non-interactive', '--accept-risk'];
+    // 6. Jalankan Service Utama
+    if (typeof openclaw.runLegacyCliEntry === 'function') {
       await openclaw.runLegacyCliEntry();
+    } else if (typeof openclaw.waitForever === 'function') {
+      await openclaw.waitForever();
     }
   } catch (error) {
     console.error("❌ Error eksekusi agent:", error);
