@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi Client OAuth 2.0
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -17,7 +17,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Dapatkan Access Token dari OAuth 2.0
+    // 2. Dapatkan Access Token OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -36,7 +36,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Buat folder dan file konfigurasi minimal
+    // 4. Buat folder dan file konfigurasi minimal untuk bypass onboarding TTY
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -58,7 +58,7 @@ async function main() {
       console.log("📝 Configuration file created automatically.");
     }
 
-    // 5. Force process.argv untuk menjalankan gateway Telegram tanpa web channel plugin
+    // 5. Override process.argv untuk menjalankan Telegram Gateway
     process.argv = [
       process.argv[0],
       process.argv[1],
@@ -68,7 +68,7 @@ async function main() {
       '--accept-risk'
     ];
 
-    // 6. Load OpenClaw & Jalankan Gateway Utama
+    // 6. Load OpenClaw dan jalankan Gateway
     const openclaw = await import('openclaw');
 
     if (typeof openclaw.runLegacyCliEntry === 'function') {
