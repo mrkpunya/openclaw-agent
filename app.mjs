@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi Client OAuth 2.0
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -18,7 +18,7 @@ async function main() {
   console.log("🔥 MEMULAI RUNTIME BARU (app.mjs) - DIRECT CLI GATEWAY...");
 
   try {
-    // 2. Dapatkan Access Token dari Google OAuth 2.0
+    // 2. Refresh Access Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -57,7 +57,7 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway murni tanpa flag invalid
+    // 5. Eksekusi Biner CLI Gateway tanpa flag invalid
     console.log("⚡ Launching OpenClaw CLI Gateway Direct Process...");
     
     execSync('npx openclaw gateway run', {
