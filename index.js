@@ -1,7 +1,6 @@
 const { GoogleAuth } = require('google-auth-library');
-const openclaw = require('openclaw');
 
-// Setup OAuth 2.0 Client
+// Setup OAuth 2.0 Auth Client
 const auth = new GoogleAuth({
   credentials: {
     client_id: process.env.GOOGLE_CLIENT_ID,
@@ -15,15 +14,18 @@ async function main() {
   console.log("Menjalankan OpenClaw Agent di Railway...");
 
   try {
-    console.log("Modul OpenClaw terdeteksi:", typeof openclaw);
+    // Memuat modul ESM openclaw secara dinamis (Async Import)
+    const openclaw = await import('openclaw');
+    console.log("Modul OpenClaw berhasil dimuat secara dinamis!");
 
-    const AgentConstructor = typeof openclaw === 'function' ? openclaw : openclaw.OpenClaw || openclaw.default || openclaw;
+    // Mengambil class/fungsi dari modul
+    const AgentConstructor = openclaw.OpenClaw || openclaw.default || openclaw.Agent || openclaw;
 
     if (typeof AgentConstructor === 'function') {
       const agent = new AgentConstructor({ authClient: auth });
       console.log("OpenClaw Agent berhasil diinisialisasi via OAuth 2.0!");
     } else {
-      console.log("Modul berhasil dimuat:", AgentConstructor);
+      console.log("Struktur modul openclaw:", Object.keys(openclaw));
     }
   } catch (error) {
     console.error("Error eksekusi agent:", error);
