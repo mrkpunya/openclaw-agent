@@ -27,7 +27,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable
+    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -57,7 +57,7 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Jalankan Biner CLI OpenClaw Langsung (Bypass monitorWebChannel)
+    // 5. Jalankan Biner CLI OpenClaw Langsung via Subprocess (Bypass monitorWebChannel)
     console.log("⚡ Launching OpenClaw Gateway Process...");
     
     const openclawProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--non-interactive', '--accept-risk'], {
