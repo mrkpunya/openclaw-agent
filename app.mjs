@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi Client OAuth 2.0
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,7 +15,6 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  // Marker unik V5 untuk memastikan Railway memuat file baru
   console.log("🔥 MEMULAI RUNTIME V5 (PURE GATEWAY RUN)...");
 
   try {
@@ -58,7 +57,7 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway Murni (Tanpa flag --non-interactive)
+    // 5. Eksekusi Biner CLI Gateway Murni tanpa flag invalid
     const command = 'npx openclaw gateway run';
     console.log(`⚡ Executing command: ${command}`);
     
