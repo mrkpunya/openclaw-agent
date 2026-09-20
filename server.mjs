@@ -15,7 +15,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V6 (server.mjs) - CLEAN CLI GATEWAY...");
+  console.log("🔥 MEMULAI RUNTIME V7 (server.mjs) - ALLOW UNCONFIGURED GATEWAY...");
 
   try {
     // 2. Refresh Access Token dari Google OAuth 2.0
@@ -47,6 +47,9 @@ async function main() {
     const initialConfig = {
       onboarded: true,
       acceptRisk: true,
+      gateway: {
+        mode: "local"
+      },
       channels: {
         telegram: {
           enabled: true,
@@ -57,8 +60,8 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway Murni tanpa flag invalid
-    const command = 'npx openclaw gateway run';
+    // 5. Eksekusi Biner CLI Gateway dengan flag --allow-unconfigured
+    const command = 'npx openclaw gateway run --allow-unconfigured';
     console.log(`⚡ Executing command: ${command}`);
     
     execSync(command, {
