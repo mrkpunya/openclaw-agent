@@ -57,10 +57,10 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI secara synchronous (Memutus total pemanggilan SDK & monitorWebChannel)
+    // 5. Eksekusi Biner CLI Gateway tanpa flag non-interactive yang invalid
     console.log("⚡ Launching OpenClaw CLI Gateway Direct Process...");
     
-    execSync('npx openclaw gateway run --non-interactive --accept-risk', {
+    execSync('npx openclaw gateway run', {
       stdio: 'inherit',
       env: process.env
     });
