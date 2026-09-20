@@ -1,4 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -17,7 +18,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Dapatkan Access Token OAuth 2.0
+    // 2. Dapatkan Access Token dari OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -43,40 +44,35 @@ async function main() {
     }
 
     const configPath = path.join(openclawDir, 'config.json');
-    if (!fs.existsSync(configPath)) {
-      const initialConfig = {
-        onboarded: true,
-        acceptRisk: true,
-        channels: {
-          telegram: {
-            enabled: true,
-            botToken: process.env.TELEGRAM_BOT_TOKEN || ""
-          }
+    const initialConfig = {
+      onboarded: true,
+      acceptRisk: true,
+      channels: {
+        telegram: {
+          enabled: true,
+          botToken: process.env.TELEGRAM_BOT_TOKEN || ""
         }
-      };
-      fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-      console.log("📝 Configuration file created automatically.");
-    }
+      }
+    };
+    fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
+    console.log("📝 Configuration file initialized.");
 
-    // 5. Override process.argv untuk memaksa eksekusi Telegram Gateway
-    process.argv = [
-      process.argv[0],
-      process.argv[1],
-      'gateway',
-      'run',
-      '--non-interactive',
-      '--accept-risk'
-    ];
+    // 5. Jalankan Biner CLI OpenClaw Langsung (Bypass monitorWebChannel)
+    console.log("⚡ Launching OpenClaw Gateway Process...");
+    
+    const openclawProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--non-interactive', '--accept-risk'], {
+      stdio: 'inherit',
+      env: process.env
+    });
 
-    // 6. Import OpenClaw
-    const openclaw = await import('openclaw');
+    openclawProcess.on('error', (err) => {
+      console.error("❌ Failed to start OpenClaw process:", err);
+    });
 
-    // 7. Panggil CLI entry point langsung (TANPA memanggil monitorWebChannel)
-    if (typeof openclaw.runLegacyCliEntry === 'function') {
-      await openclaw.runLegacyCliEntry();
-    } else if (typeof openclaw.waitForever === 'function') {
-      await openclaw.waitForever();
-    }
+    openclawProcess.on('exit', (code) => {
+      console.log(`⚠️ OpenClaw process exited with code ${code}`);
+    });
+
   } catch (error) {
     console.error("❌ Error eksekusi agent:", error);
   }
