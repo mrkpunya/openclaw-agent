@@ -1,10 +1,13 @@
-import * as openclaw from 'openclaw';
+import { createRequire } from 'module';
 import { GoogleAuth } from 'google-auth-library';
 
-// Inisialisasi OAuth 2.0 Auth Client
+const require = createRequire(import.meta.url);
+const openclaw = require('openclaw');
+
+// Setup OAuth 2.0 Client dari Environment Variables
 const auth = new GoogleAuth({
   credentials: {
-    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_id: process.process.env.GOOGLE_CLIENT_ID,
     client_secret: process.env.GOOGLE_CLIENT_SECRET,
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
   },
@@ -15,20 +18,19 @@ async function main() {
   console.log("Menjalankan OpenClaw Agent di Railway...");
 
   try {
-    // Cetak ekspor yang tersedia di log untuk pemeriksaan
-    console.log("Ekspor OpenClaw yang tersedia:", Object.keys(openclaw));
-
-    // Mencari konstruktor atau fungsi utama dari namespace
-    const AgentConstructor = openclaw.default || openclaw.OpenClaw || openclaw.Agent || openclaw;
+    console.log("Tipe modul OpenClaw:", typeof openclaw);
+    
+    // Mengecek apakah modul berupa konstruktor/fungsi
+    const AgentConstructor = typeof openclaw === 'function' ? openclaw : openclaw.OpenClaw || openclaw.default || openclaw;
 
     if (typeof AgentConstructor === 'function') {
       const agent = new AgentConstructor({ authClient: auth });
       console.log("OpenClaw Agent berhasil diinisialisasi via OAuth 2.0!");
     } else {
-      console.log("Modul OpenClaw berhasil dimuat:", AgentConstructor);
+      console.log("OpenClaw berhasil dimuat:", AgentConstructor);
     }
   } catch (error) {
-    console.error("Error saat menjalankan agent:", error);
+    console.error("Error eksekusi agent:", error);
   }
 }
 
