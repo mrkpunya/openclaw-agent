@@ -17,7 +17,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Dapatkan Access Token OAuth 2.0
+    // 2. Refresh Token Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -26,7 +26,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable OpenClaw
+    // 3. Set Environment Token
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -36,7 +36,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Buat folder dan file konfigurasi minimal untuk bypass onboarding TTY
+    // 4. Inisialisasi file konfigurasi minimal untuk bypass TTY Onboarding
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -58,7 +58,7 @@ async function main() {
       console.log("📝 Configuration file created automatically.");
     }
 
-    // 5. Override process.argv untuk memaksa eksekusi Telegram Gateway
+    // 5. Override process.argv untuk menjalankan gateway Telegram
     process.argv = [
       process.argv[0],
       process.argv[1],
@@ -68,10 +68,10 @@ async function main() {
       '--accept-risk'
     ];
 
-    // 6. Load OpenClaw
+    // 6. Import OpenClaw
     const openclaw = await import('openclaw');
 
-    // 7. Langsung panggil CLI Entry point (Hapus pemanggilan monitorWebChannel)
+    // 7. Panggil CLI entry point secara langsung (TANPA monitorWebChannel)
     if (typeof openclaw.runLegacyCliEntry === 'function') {
       await openclaw.runLegacyCliEntry();
     } else if (typeof openclaw.waitForever === 'function') {
