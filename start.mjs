@@ -15,8 +15,8 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  // Teks log diperbarui untuk memastikan versi baru benar-benar berjalan
-  console.log("🚀 Memulai OpenClaw Agent Service (V2 Direct CLI)...");
+  // Marker unik untuk memastikan kode paling baru yang berjalan
+  console.log("🚀 Memulai OpenClaw Agent Service (DIRECT CLI V3)...");
 
   try {
     // 2. Dapatkan Access Token dari Google OAuth 2.0
@@ -58,8 +58,8 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Secara Synchronous (Bypassing SDK & monitorWebChannel)
-    console.log("⚡ Executing OpenClaw Gateway Process...");
+    // 5. Eksekusi Biner CLI Secara Synchronous (Memutus Panggilan SDK & monitorWebChannel)
+    console.log("⚡ Executing OpenClaw Gateway Process via CLI...");
     
     execSync('npx openclaw gateway run --non-interactive --accept-risk', {
       stdio: 'inherit',
