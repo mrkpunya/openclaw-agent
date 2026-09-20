@@ -18,14 +18,14 @@ async function main() {
     const openclaw = await import('openclaw');
     console.log("Modul OpenClaw berhasil dimuat secara dinamis!");
 
-    // Mengambil class/fungsi dari modul
+    // Mengambil class/konstruktor dari modul yang di-import
     const AgentConstructor = openclaw.OpenClaw || openclaw.default || openclaw.Agent || openclaw;
 
     if (typeof AgentConstructor === 'function') {
       const agent = new AgentConstructor({ authClient: auth });
       console.log("OpenClaw Agent berhasil diinisialisasi via OAuth 2.0!");
     } else {
-      console.log("Struktur modul openclaw:", Object.keys(openclaw));
+      console.log("Daftar komponen openclaw:", Object.keys(openclaw));
     }
   } catch (error) {
     console.error("Error eksekusi agent:", error);
