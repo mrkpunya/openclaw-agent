@@ -17,7 +17,7 @@ async function main() {
   try {
     const openclaw = await import('openclaw');
     
-    // Verifikasi Token Google OAuth 2.0
+    // Verifikasi Token Google OAuth 2.0 (Gunakan OAuth2Client)
     const tokenResponse = await oauth2Client.getAccessToken();
     if (tokenResponse.token) {
       console.log("✅ Google OAuth 2.0 Authenticated successfully!");
