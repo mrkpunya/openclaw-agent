@@ -1,6 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 
-// Inisialisasi Auth Client OAuth 2.0
+// Inisialisasi Auth Client Google OAuth 2.0
 const auth = new GoogleAuth({
   credentials: {
     client_id: process.env.GOOGLE_CLIENT_ID,
@@ -11,28 +11,31 @@ const auth = new GoogleAuth({
 });
 
 async function main() {
-  console.log("🚀 Menjalankan OpenClaw Agent di Railway...");
+  console.log("🚀 Memulai OpenClaw Agent dengan Integrasi Telegram...");
 
   try {
     const openclaw = await import('openclaw');
     
-    // Verifikasi token OAuth sebelum menjalankan CLI/gateway
+    // Verifikasi Token Google
     const client = await auth.getClient();
-    const token = await client.getAccessToken();
-    console.log("✅ Authenticated via Google OAuth 2.0 successfully!");
+    await client.getAccessToken();
+    console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // Eksekusi entry point utama OpenClaw
+    // Cek ketersediaan Token Telegram
+    if (!process.env.TELEGRAM_BOT_TOKEN) {
+      console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
+    } else {
+      console.log("🤖 Menghubungkan ke Bot Telegram...");
+    }
+
+    // Jalankan entry point OpenClaw
     if (typeof openclaw.runLegacyCliEntry === 'function') {
-      console.log("🤖 Starting OpenClaw Service...");
       await openclaw.runLegacyCliEntry();
     } else if (typeof openclaw.waitForever === 'function') {
-      console.log("🤖 OpenClaw running in background mode...");
       await openclaw.waitForever();
-    } else {
-      console.log(" Ready.");
     }
   } catch (error) {
-    console.error("❌ Error running OpenClaw Agent:", error);
+    console.error("❌ Error saat menjalankan agent:", error);
   }
 }
 
