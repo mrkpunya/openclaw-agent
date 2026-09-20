@@ -1,4 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
+import { execSync } from 'child_process';
 
 // 1. Setup OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
@@ -14,7 +15,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Dapatkan Access Token dari OAuth 2.0
+    // 2. Refresh Access Token
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -29,27 +30,30 @@ async function main() {
 
     if (process.env.TELEGRAM_BOT_TOKEN) {
       console.log("🤖 Menghubungkan Gateway ke Telegram Bot...");
-    } else {
-      console.warn("⚠️ TELEGRAM_BOT_TOKEN belum terdeteksi di Railway Variables.");
     }
 
-    // 4. Force Process Arguments agar OpenClaw berjalan mode non-interaktif
-    process.argv = [
-      process.argv[0],
-      process.argv[1],
-      'onboard',
-      '--non-interactive',
-      '--accept-risk'
-    ];
+    // 4. Bypassing TTY Onboarding via CLI Executable
+    try {
+      console.log("⚡ Eksekusi headless onboarding...");
+      execSync('npx openclaw onboard --non-interactive --accept-risk', {
+        stdio: 'inherit',
+        env: process.env,
+      });
+    } catch (e) {
+      console.log("ℹ️ Onboarding step bypassed/completed.");
+    }
 
     // 5. Load OpenClaw
     const openclaw = await import('openclaw');
 
-    // 6. Jalankan Service Utama
-    if (typeof openclaw.runLegacyCliEntry === 'function') {
-      await openclaw.runLegacyCliEntry();
+    // 6. Jalankan Service Utama / Background Mode
+    if (typeof openclaw.monitorWebChannel === 'function') {
+      await openclaw.monitorWebChannel();
     } else if (typeof openclaw.waitForever === 'function') {
       await openclaw.waitForever();
+    } else if (typeof openclaw.runLegacyCliEntry === 'function') {
+      process.argv = ['node', 'start.mjs', 'gateway', 'run'];
+      await openclaw.runLegacyCliEntry();
     }
   } catch (error) {
     console.error("❌ Error eksekusi agent:", error);
