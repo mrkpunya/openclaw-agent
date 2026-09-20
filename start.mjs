@@ -1,5 +1,4 @@
 import { OAuth2Client } from 'google-auth-library';
-import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -27,7 +26,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable
+    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -37,15 +36,15 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Buat folder dan file konfigurasi minimal untuk melewati wizard onboarding
+    // 4. Buat folder dan file konfigurasi minimal untuk Bypass Wizard Onboarding
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
-    
+
     const configPath = path.join(openclawDir, 'config.json');
     if (!fs.existsSync(configPath)) {
-      const dummyConfig = {
+      const initialConfig = {
         onboarded: true,
         acceptRisk: true,
         channels: {
@@ -55,30 +54,27 @@ async function main() {
           }
         }
       };
-      fs.writeFileSync(configPath, JSON.stringify(dummyConfig, null, 2));
-      console.log("📝 Configuration file initialized automatically.");
+      fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
+      console.log("📝 Configuration file created automatically.");
     }
 
-    // 5. Jalankan command onboarding non-interaktif sebagai jaring pengaman
-    try {
-      execSync('npx openclaw onboard --non-interactive --accept-risk', {
-        stdio: 'ignore',
-        env: process.env,
-      });
-    } catch (e) {
-      // Abaikan jika command gagal/sudah selesai
-    }
-
-    // 6. Load OpenClaw
+    // 5. Load OpenClaw
     const openclaw = await import('openclaw');
 
-    // 7. Jalankan Service/Gateway Utama
+    // 6. Jalankan Service Utama / Listening Mode
     if (typeof openclaw.monitorWebChannel === 'function') {
       await openclaw.monitorWebChannel();
     } else if (typeof openclaw.waitForever === 'function') {
       await openclaw.waitForever();
     } else if (typeof openclaw.runLegacyCliEntry === 'function') {
-      process.argv = [process.argv[0], process.argv[1], 'gateway', 'run'];
+      // Force subcommand ke mode non-interaktif
+      process.argv = [
+        process.argv[0],
+        process.argv[1],
+        'onboard',
+        '--non-interactive',
+        '--accept-risk'
+      ];
       await openclaw.runLegacyCliEntry();
     }
   } catch (error) {
