@@ -58,7 +58,7 @@ async function main() {
       }
     };
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 Configuration file initialized.");
+    console.log("📝 Configuration file initialized with gateway.mode=local.");
 
     // 5. Eksekusi Biner CLI Gateway dengan flag --allow-unconfigured
     const command = 'npx openclaw gateway run --allow-unconfigured';
