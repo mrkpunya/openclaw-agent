@@ -57,7 +57,7 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway Murni tanpa flag invalid
+    // 5. Eksekusi Biner CLI Gateway Murni
     const command = 'npx openclaw gateway run';
     console.log(`⚡ Executing command: ${command}`);
     
