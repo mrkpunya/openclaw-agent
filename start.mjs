@@ -1,7 +1,10 @@
 import { OAuth2Client } from 'google-auth-library';
 import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
-// 1. Setup OAuth 2.0 Client
+// 1. Inisialisasi Client OAuth 2.0
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,7 +18,7 @@ async function main() {
   console.log("🚀 Memulai OpenClaw Agent Service...");
 
   try {
-    // 2. Refresh Access Token
+    // 2. Dapatkan Access Token dari OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -30,29 +33,52 @@ async function main() {
 
     if (process.env.TELEGRAM_BOT_TOKEN) {
       console.log("🤖 Menghubungkan Gateway ke Telegram Bot...");
+    } else {
+      console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Bypassing TTY Onboarding via CLI Executable
+    // 4. Buat folder dan file konfigurasi minimal untuk melewati wizard onboarding
+    const openclawDir = path.join(os.homedir(), '.openclaw');
+    if (!fs.existsSync(openclawDir)) {
+      fs.mkdirSync(openclawDir, { recursive: true });
+    }
+    
+    const configPath = path.join(openclawDir, 'config.json');
+    if (!fs.existsSync(configPath)) {
+      const dummyConfig = {
+        onboarded: true,
+        acceptRisk: true,
+        channels: {
+          telegram: {
+            enabled: true,
+            botToken: process.env.TELEGRAM_BOT_TOKEN || ""
+          }
+        }
+      };
+      fs.writeFileSync(configPath, JSON.stringify(dummyConfig, null, 2));
+      console.log("📝 Configuration file initialized automatically.");
+    }
+
+    // 5. Jalankan command onboarding non-interaktif sebagai jaring pengaman
     try {
-      console.log("⚡ Eksekusi headless onboarding...");
       execSync('npx openclaw onboard --non-interactive --accept-risk', {
-        stdio: 'inherit',
+        stdio: 'ignore',
         env: process.env,
       });
     } catch (e) {
-      console.log("ℹ️ Onboarding step bypassed/completed.");
+      // Abaikan jika command gagal/sudah selesai
     }
 
-    // 5. Load OpenClaw
+    // 6. Load OpenClaw
     const openclaw = await import('openclaw');
 
-    // 6. Jalankan Service Utama / Background Mode
+    // 7. Jalankan Service/Gateway Utama
     if (typeof openclaw.monitorWebChannel === 'function') {
       await openclaw.monitorWebChannel();
     } else if (typeof openclaw.waitForever === 'function') {
       await openclaw.waitForever();
     } else if (typeof openclaw.runLegacyCliEntry === 'function') {
-      process.argv = ['node', 'start.mjs', 'gateway', 'run'];
+      process.argv = [process.argv[0], process.argv[1], 'gateway', 'run'];
       await openclaw.runLegacyCliEntry();
     }
   } catch (error) {
