@@ -1,0 +1,11 @@
+{
+  "name": "openclaw-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx openclaw@latest"
+  },
+  "dependencies": {
+    "openclaw": "latest"
+  }
+}
