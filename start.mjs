@@ -58,7 +58,7 @@ async function main() {
       console.log("📝 Configuration file created automatically.");
     }
 
-    // 5. Override process.argv untuk menjalankan Telegram Gateway
+    // 5. Override process.argv untuk memaksa eksekusi Telegram Gateway
     process.argv = [
       process.argv[0],
       process.argv[1],
@@ -68,9 +68,10 @@ async function main() {
       '--accept-risk'
     ];
 
-    // 6. Load OpenClaw dan jalankan Gateway
+    // 6. Load OpenClaw
     const openclaw = await import('openclaw');
 
+    // 7. Langsung panggil CLI Entry point (Hapus pemanggilan monitorWebChannel)
     if (typeof openclaw.runLegacyCliEntry === 'function') {
       await openclaw.runLegacyCliEntry();
     } else if (typeof openclaw.waitForever === 'function') {
