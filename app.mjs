@@ -15,10 +15,10 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME BARU (app.mjs) - CLEAN CLI GATEWAY...");
+  console.log("🔥 MEMULAI RUNTIME V4 (PURE GATEWAY RUN)...");
 
   try {
-    // 2. Dapatkan Access Token dari Google OAuth 2.0
+    // 2. Refresh Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -27,7 +27,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable OpenClaw
+    // 3. Inject Token ke Environment Variable
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -57,10 +57,11 @@ async function main() {
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
     console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway murni tanpa flag invalid
-    console.log("⚡ Launching OpenClaw CLI Gateway Direct Process...");
+    // 5. Eksekusi Biner CLI Gateway murni
+    const command = 'npx openclaw gateway run';
+    console.log(`⚡ Executing command: ${command}`);
     
-    execSync('npx openclaw gateway run', {
+    execSync(command, {
       stdio: 'inherit',
       env: process.env
     });
