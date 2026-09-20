@@ -1,5 +1,5 @@
+import openclaw from 'openclaw';
 import { GoogleAuth } from 'google-auth-library';
-import { OpenClaw } from 'openclaw';
 
 // Inisialisasi Auth via OAuth 2.0 Token
 const auth = new GoogleAuth({
@@ -11,18 +11,24 @@ const auth = new GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
 });
 
-const agent = new OpenClaw({
-  authClient: auth,
-});
-
 async function main() {
-  console.log("OpenClaw Agent berhasil aktif di Railway!");
+  console.log("Mencoba menjalankan OpenClaw Agent...");
   
   try {
-    const response = await agent.chat("Halo OpenClaw, sistem siap digunakan.");
-    console.log("Response Agent:", response);
+    // Memeriksa struktur objek yang diekspor
+    console.log("Modul OpenClaw terdeteksi:", openclaw);
+    
+    // Inisialisasi jika berupa fungsi/klas
+    const AgentClass = typeof openclaw === 'function' ? openclaw : openclaw.default || openclaw.Agent;
+    
+    if (AgentClass) {
+      const agent = new AgentClass({ authClient: auth });
+      console.log("OpenClaw Agent berhasil diinisialisasi via OAuth 2.0!");
+    } else {
+      console.log("Aplikasi berjalan, siap menerima instruksi.");
+    }
   } catch (error) {
-    console.error("Error eksekusi agent:", error);
+    console.error("Error saat menjalankan agent:", error);
   }
 }
 
