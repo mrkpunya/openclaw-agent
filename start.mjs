@@ -36,7 +36,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Buat folder dan file konfigurasi minimal untuk Bypass Wizard Onboarding
+    // 4. Buat folder dan file konfigurasi minimal
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -58,24 +58,23 @@ async function main() {
       console.log("📝 Configuration file created automatically.");
     }
 
-    // 5. Load OpenClaw
+    // 5. Force process.argv untuk menjalankan gateway Telegram tanpa web channel plugin
+    process.argv = [
+      process.argv[0],
+      process.argv[1],
+      'gateway',
+      'run',
+      '--non-interactive',
+      '--accept-risk'
+    ];
+
+    // 6. Load OpenClaw & Jalankan Gateway Utama
     const openclaw = await import('openclaw');
 
-    // 6. Jalankan Service Utama / Listening Mode
-    if (typeof openclaw.monitorWebChannel === 'function') {
-      await openclaw.monitorWebChannel();
+    if (typeof openclaw.runLegacyCliEntry === 'function') {
+      await openclaw.runLegacyCliEntry();
     } else if (typeof openclaw.waitForever === 'function') {
       await openclaw.waitForever();
-    } else if (typeof openclaw.runLegacyCliEntry === 'function') {
-      // Force subcommand ke mode non-interaktif
-      process.argv = [
-        process.argv[0],
-        process.argv[1],
-        'onboard',
-        '--non-interactive',
-        '--accept-risk'
-      ];
-      await openclaw.runLegacyCliEntry();
     }
   } catch (error) {
     console.error("❌ Error eksekusi agent:", error);
