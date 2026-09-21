@@ -2,7 +2,6 @@ import { OAuth2Client } from 'google-auth-library';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 
 // 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
@@ -15,7 +14,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V12 - CLI ALLOW-FROM INJECTED...");
+  console.log("🔥 MEMULAI RUNTIME V13 - LOCAL DIRECTORY CONFIG BINDING...");
 
   try {
     // 2. Refresh Access Token dari Google OAuth 2.0
@@ -34,17 +33,9 @@ async function main() {
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 4. Buat folder dan config file
-    const openclawDir = path.join(os.homedir(), '.openclaw');
-    if (!fs.existsSync(openclawDir)) {
-      fs.mkdirSync(openclawDir, { recursive: true });
-    }
-
-    const configPath = path.join(openclawDir, 'config.json');
-    if (fs.existsSync(configPath)) {
-      fs.unlinkSync(configPath);
-    }
-
+    // 4. Buat config.json LANGSUNG di root direktori kerja aplikasi (/app/config.json)
+    const localConfigPath = path.join(process.cwd(), 'config.json');
+    
     const initialConfig = {
       onboarded: true,
       acceptRisk: true,
@@ -60,12 +51,12 @@ async function main() {
       }
     };
 
-    fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 CONFIG UPDATED: Telegram Owner ID set to 8965095104.");
+    fs.writeFileSync(localConfigPath, JSON.stringify(initialConfig, null, 2));
+    console.log("📝 LOCAL CONFIG CREATED: Written to /app/config.json with Owner ID 8965095104.");
 
-    // 5. Eksekusi Biner CLI Gateway dengan flag --allow-from langsung
-    const command = `npx openclaw gateway run --allow-unconfigured --token ${gatewayToken} --allow-from 8965095104`;
-    console.log(`⚡ Executing command: npx openclaw gateway run --allow-unconfigured --token [PROTECTED] --allow-from 8965095104`);
+    // 5. Eksekusi Biner CLI Gateway
+    const command = `npx openclaw gateway run --token ${gatewayToken}`;
+    console.log(`⚡ Executing command: ${command}`);
     
     execSync(command, {
       stdio: 'inherit',
