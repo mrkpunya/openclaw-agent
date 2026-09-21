@@ -15,7 +15,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V10 - FORCED OWNER PERMISSION RESET...");
+  console.log("🔥 MEMULAI RUNTIME V11 - CORRECT TELEGRAM ID (8965095104)...");
 
   try {
     // 2. Refresh Access Token dari Google OAuth 2.0
@@ -34,7 +34,7 @@ async function main() {
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 4. HAPUS PAKSA CONFIG LAMA & TULIS CONFIG BARU
+    // 4. Padam konfigurasi lama dan buat konfigurasi baru dengan ID Telegram yang betul
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -42,7 +42,6 @@ async function main() {
 
     const configPath = path.join(openclawDir, 'config.json');
     
-    // Paksa hapus jika config lama masih tersisa di container
     if (fs.existsSync(configPath)) {
       fs.unlinkSync(configPath);
     }
@@ -57,13 +56,13 @@ async function main() {
         telegram: {
           enabled: true,
           botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["8965095104"] // ID Telegram kamu wajib sebagai Owner
+          allowFrom: ["8965095104"] // ID Telegram yang betul
         }
       }
     };
 
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 FORCED: Configuration file re-written with Telegram Owner ID 896509104.");
+    console.log("📝 CONFIG UPDATED: Telegram Owner ID set to 8965095104.");
 
     // 5. Eksekusi Biner CLI Gateway
     const command = `npx openclaw gateway run --allow-unconfigured --token ${gatewayToken}`;
