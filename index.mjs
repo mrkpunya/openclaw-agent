@@ -57,7 +57,7 @@ async function main() {
         telegram: {
           enabled: true,
           botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["896509104"] // Membebaskan akun Telegram kamu dari permintaan pairing code
+          allowFrom: ["896509104"] // Langsung mengizinkan User ID Telegram kamu tanpa pairing
         }
       }
     };
