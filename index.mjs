@@ -48,7 +48,7 @@ async function main() {
     };
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
 
-    // 5. Jalankan Gateway Service di background (Asinkron)
+    // 5. Jalankan Gateway Service di background (Asinkron tanpa --config)
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
@@ -56,7 +56,7 @@ async function main() {
       shell: true
     });
 
-    // 6. Tunggu 8 detik hingga Gateway siap, lalu jalankan pairing approve
+    // 6. Tunggu 8 detik hingga Gateway siap, lalu jalankan pairing approve otomatis
     setTimeout(() => {
       console.log("🔓 Executing automatic pairing approval for Telegram ID 8965095104...");
       try {
