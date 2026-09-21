@@ -31,7 +31,7 @@ async function main() {
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
-    // Set Token Autentikasi Gateway untuk lingkungan kontainer (Railway)
+    // Inject Gateway Token untuk autentikasi wajib di Railway container
     process.env.OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
 
     if (process.env.TELEGRAM_BOT_TOKEN) {
