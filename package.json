@@ -1,9 +1,9 @@
 {
   "name": "openclaw-agent",
-  "version": "3.0.2",
+  "version": "4.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node index.mjs"
   },
   "dependencies": {
     "google-auth-library": "^9.0.0",
