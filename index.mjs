@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -14,9 +15,10 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V13 - EXPLICIT CONFIG BINDING...");
+  console.log("🔥 MEMULAI RUNTIME V14 - AUTOMATIC PAIRING APPROVAL...");
 
   try {
+    // 2. Refresh Access Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -25,45 +27,40 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
+    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    const fullConfig = {
+    // 4. Inisialisasi config dasar
+    const openclawDir = path.join(os.homedir(), '.openclaw');
+    if (!fs.existsSync(openclawDir)) {
+      fs.mkdirSync(openclawDir, { recursive: true });
+    }
+
+    const configPath = path.join(openclawDir, 'config.json');
+    const initialConfig = {
       onboarded: true,
       acceptRisk: true,
       gateway: {
         mode: "local"
-      },
-      channels: {
-        telegram: {
-          enabled: true,
-          botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["8965095104"]
-        }
       }
     };
+    fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
 
-    const configContent = JSON.stringify(fullConfig, null, 2);
-
-    // Tulis ke ~/.openclaw/config.json
-    const homeOpenclawDir = path.join(os.homedir(), '.openclaw');
-    if (!fs.existsSync(homeOpenclawDir)) {
-      fs.mkdirSync(homeOpenclawDir, { recursive: true });
+    // 5. Eksekusi Approve Pairing untuk Telegram ID Kamu (8965095104)
+    try {
+      console.log("🔓 Approving Telegram ID 8965095104...");
+      execSync(`npx openclaw pairing approve telegram 8965095104`, { stdio: 'inherit' });
+    } catch (e) {
+      console.log("ℹ️ Pairing auto-approve skipped or already exists.");
     }
-    fs.writeFileSync(path.join(homeOpenclawDir, 'config.json'), configContent);
 
-    // Tulis juga ke /app/config.json
-    const localConfigPath = path.join(process.cwd(), 'config.json');
-    fs.writeFileSync(localConfigPath, configContent);
-
-    console.log("📝 CONFIG BIND: Successfully written with Telegram Owner ID 8965095104.");
-
-    // Paksa biner CLI membaca file konfigurasi secara spesifik
-    const command = `npx openclaw gateway run --config ${localConfigPath} --token ${gatewayToken}`;
-    console.log(`⚡ Executing command: npx openclaw gateway run --config /app/config.json --token [PROTECTED]`);
+    // 6. Jalankan Gateway OpenClaw
+    const command = `npx openclaw gateway run --allow-unconfigured --token ${gatewayToken}`;
+    console.log(`⚡ Executing command: npx openclaw gateway run --allow-unconfigured --token [PROTECTED]`);
     
     execSync(command, {
       stdio: 'inherit',
