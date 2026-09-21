@@ -57,7 +57,7 @@ async function main() {
         telegram: {
           enabled: true,
           botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["896509104"] // ID Telegram kamu wajib sebagai Owner
+          allowFrom: ["8965095104"] // ID Telegram kamu wajib sebagai Owner
         }
       }
     };
