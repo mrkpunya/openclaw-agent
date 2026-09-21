@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -18,7 +17,6 @@ async function main() {
   console.log("🔥 MEMULAI RUNTIME V13 - EXPLICIT CONFIG BINDING...");
 
   try {
-    // 2. Refresh Access Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -27,14 +25,12 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 4. Susun struktur konfigurasi lengkap
     const fullConfig = {
       onboarded: true,
       acceptRisk: true,
@@ -59,13 +55,13 @@ async function main() {
     }
     fs.writeFileSync(path.join(homeOpenclawDir, 'config.json'), configContent);
 
-    // Tulis juga ke /app/config.json (direktori lokal kerja)
+    // Tulis juga ke /app/config.json
     const localConfigPath = path.join(process.cwd(), 'config.json');
     fs.writeFileSync(localConfigPath, configContent);
 
-    console.log("📝 CONFIG BIND: Successfully written to home and local working directory with Telegram Owner ID 8965095104.");
+    console.log("📝 CONFIG BIND: Successfully written with Telegram Owner ID 8965095104.");
 
-    // 5. Eksekusi Biner CLI Gateway menunjuk langsung ke file config
+    // Paksa biner CLI membaca file konfigurasi secara spesifik
     const command = `npx openclaw gateway run --config ${localConfigPath} --token ${gatewayToken}`;
     console.log(`⚡ Executing command: npx openclaw gateway run --config /app/config.json --token [PROTECTED]`);
     
