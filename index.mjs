@@ -40,7 +40,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
-    // 4. Inisialisasi folder & file konfigurasi minimal (~/.openclaw/config.json)
+    // 4. Inisialisasi folder & file konfigurasi dengan Telegram Owner ID
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -57,7 +57,7 @@ async function main() {
         telegram: {
           enabled: true,
           botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["896509104"] // User ID Telegram kamu didaftarkan langsung sebagai owner
+          allowFrom: ["896509104"] // Membebaskan akun Telegram kamu dari permintaan pairing code
         }
       }
     };
