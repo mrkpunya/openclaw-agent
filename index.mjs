@@ -15,7 +15,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V9 (index.mjs) - TELEGRAM OWNER CONFIGURED...");
+  console.log("🔥 MEMULAI RUNTIME V10 - FORCED OWNER PERMISSION RESET...");
 
   try {
     // 2. Refresh Access Token dari Google OAuth 2.0
@@ -34,19 +34,19 @@ async function main() {
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-      console.log("🤖 Menghubungkan Gateway ke Telegram Bot...");
-    } else {
-      console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
-    }
-
-    // 4. Inisialisasi folder & file konfigurasi dengan Telegram Owner ID
+    // 4. HAPUS PAKSA CONFIG LAMA & TULIS CONFIG BARU
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
     const configPath = path.join(openclawDir, 'config.json');
+    
+    // Paksa hapus jika config lama masih tersisa di container
+    if (fs.existsSync(configPath)) {
+      fs.unlinkSync(configPath);
+    }
+
     const initialConfig = {
       onboarded: true,
       acceptRisk: true,
@@ -57,12 +57,13 @@ async function main() {
         telegram: {
           enabled: true,
           botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-          allowFrom: ["896509104"] // Langsung mengizinkan User ID Telegram kamu tanpa pairing
+          allowFrom: ["896509104"] // ID Telegram kamu wajib sebagai Owner
         }
       }
     };
+
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 Configuration file initialized with Telegram Owner ID.");
+    console.log("📝 FORCED: Configuration file re-written with Telegram Owner ID 896509104.");
 
     // 5. Eksekusi Biner CLI Gateway
     const command = `npx openclaw gateway run --allow-unconfigured --token ${gatewayToken}`;
