@@ -15,7 +15,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V7 (index.mjs) - ALLOW UNCONFIGURED GATEWAY...");
+  console.log("🔥 MEMULAI RUNTIME V8 (index.mjs) - AUTHENTICATED GATEWAY...");
 
   try {
     // 2. Refresh Access Token dari Google OAuth 2.0
@@ -30,6 +30,9 @@ async function main() {
     // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
+
+    // Set Token Autentikasi Gateway untuk lingkungan kontainer (Railway)
+    process.env.OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
 
     if (process.env.TELEGRAM_BOT_TOKEN) {
       console.log("🤖 Menghubungkan Gateway ke Telegram Bot...");
@@ -58,9 +61,9 @@ async function main() {
       }
     };
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 Configuration file initialized with gateway.mode=local.");
+    console.log("📝 Configuration file initialized.");
 
-    // 5. Eksekusi Biner CLI Gateway dengan flag --allow-unconfigured
+    // 5. Eksekusi Biner CLI Gateway
     const command = 'npx openclaw gateway run --allow-unconfigured';
     console.log(`⚡ Executing command: ${command}`);
     
