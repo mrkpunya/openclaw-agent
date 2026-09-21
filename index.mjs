@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -14,9 +15,10 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V8 (index.mjs) - AUTHENTICATED GATEWAY...");
+  console.log("🔥 MEMULAI RUNTIME V9 (index.mjs) - TELEGRAM OWNER CONFIGURED...");
 
   try {
+    // 2. Refresh Access Token dari Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
 
     if (!token) {
@@ -25,6 +27,7 @@ async function main() {
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
+    // 3. Inject Token ke Environment Variable OpenClaw
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
@@ -37,6 +40,7 @@ async function main() {
       console.warn("⚠️ TELEGRAM_BOT_TOKEN belum diset di Railway Variables!");
     }
 
+    // 4. Inisialisasi folder & file konfigurasi minimal (~/.openclaw/config.json)
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -52,14 +56,15 @@ async function main() {
       channels: {
         telegram: {
           enabled: true,
-          botToken: process.env.TELEGRAM_BOT_TOKEN || ""
+          botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+          allowFrom: ["896509104"] // User ID Telegram kamu didaftarkan langsung sebagai owner
         }
       }
     };
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-    console.log("📝 Configuration file initialized.");
+    console.log("📝 Configuration file initialized with Telegram Owner ID.");
 
-    // Melewatkan token autentikasi langsung ke perintah CLI
+    // 5. Eksekusi Biner CLI Gateway
     const command = `npx openclaw gateway run --allow-unconfigured --token ${gatewayToken}`;
     console.log(`⚡ Executing command: npx openclaw gateway run --allow-unconfigured --token [PROTECTED]`);
     
