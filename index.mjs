@@ -14,11 +14,11 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME V17 - DYNAMIC AUTO-CAPTURE PAIRING CODE...");
+  console.log("🔥 EXECUTING FINAL PAIRING APPROVAL (27KM3FQT)...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
-    if (!token) throw new Error("Gagal mengambil Access Token Google");
+    if (!token) throw new Error("Gagal OAuth Token");
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
@@ -27,15 +27,7 @@ async function main() {
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    const openclawDir = path.join(os.homedir(), '.openclaw');
-    if (!fs.existsSync(openclawDir)) {
-      fs.mkdirSync(openclawDir, { recursive: true });
-    }
-    fs.writeFileSync(
-      path.join(openclawDir, 'config.json'),
-      JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2)
-    );
-
+    // 1. Jalankan Gateway Service di Background
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       env: process.env,
@@ -44,25 +36,20 @@ async function main() {
 
     let approved = false;
 
-    // Menangkap stdout dan mengekstrak kode pairing secara dinamis
     gatewayProcess.stdout.on('data', (data) => {
       const output = data.toString();
       process.stdout.write(output);
 
-      // Cari pola perintah 'openclaw pairing approve telegram CODE'
-      const match = output.match(/openclaw pairing approve telegram ([A-Z0-9]+)/i);
-      
-      if (match && match[1] && !approved) {
+      // Eksekusi approval untuk kode 27KM3FQT begitu gateway ready
+      if (!approved && (output.includes('ready') || output.includes('isolated polling ingress started'))) {
         approved = true;
-        const pairingCode = match[1];
-        console.log(`\n🔓 DETECTED PAIRING CODE: ${pairingCode}. Approving automatically...`);
-        
+        console.log("🔓 Gateway is ready! Approving code 27KM3FQT to persistent volume...");
         setTimeout(() => {
           try {
-            const res = execSync(`npx openclaw pairing approve telegram ${pairingCode}`, { encoding: 'utf-8' });
-            console.log("✅ AUTO-PAIRING SUCCESSFUL:", res);
+            const res = execSync(`npx openclaw pairing approve telegram 27KM3FQT`, { encoding: 'utf-8' });
+            console.log("✅ PERMANENT PAIRING SUCCESSFUL:", res);
           } catch (e) {
-            console.log("ℹ️ Auto-pairing execution result:", e.message || e);
+            console.log("ℹ️ Pairing execution note:", e.message || e);
           }
         }, 1000);
       }
