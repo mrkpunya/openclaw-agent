@@ -14,11 +14,11 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME AUTO-PAIRING PM78LSUS...");
+  console.log("🔥 RUNTIME V17 - DYNAMIC AUTO-CAPTURE PAIRING CODE...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
-    if (!token) throw new Error("Gagal OAuth Token");
+    if (!token) throw new Error("Gagal mengambil Access Token Google");
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
@@ -31,7 +31,10 @@ async function main() {
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
-    fs.writeFileSync(path.join(openclawDir, 'config.json'), JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2));
+    fs.writeFileSync(
+      path.join(openclawDir, 'config.json'),
+      JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2)
+    );
 
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
@@ -41,21 +44,27 @@ async function main() {
 
     let approved = false;
 
-    // Pipe stdout & stderr agar tetap terlihat di log Railway
+    // Menangkap stdout dan mengekstrak kode pairing secara dinamis
     gatewayProcess.stdout.on('data', (data) => {
       const output = data.toString();
       process.stdout.write(output);
 
-      // Eksekusi approval begitu gateway menyatakan "ready"
-      if (!approved && (output.includes('ready') || output.includes('isolated polling ingress started'))) {
+      // Cari pola perintah 'openclaw pairing approve telegram CODE'
+      const match = output.match(/openclaw pairing approve telegram ([A-Z0-9]+)/i);
+      
+      if (match && match[1] && !approved) {
         approved = true;
-        console.log("🔓 Gateway is ready! Approving Telegram Pairing Code PM78LSUS...");
-        try {
-          const res = execSync(`npx openclaw pairing approve telegram PM78LSUS`, { encoding: 'utf-8' });
-          console.log("✅ Pairing Approved Successfully:", res);
-        } catch (e) {
-          console.log("ℹ️ Pairing attempt note:", e.message || e);
-        }
+        const pairingCode = match[1];
+        console.log(`\n🔓 DETECTED PAIRING CODE: ${pairingCode}. Approving automatically...`);
+        
+        setTimeout(() => {
+          try {
+            const res = execSync(`npx openclaw pairing approve telegram ${pairingCode}`, { encoding: 'utf-8' });
+            console.log("✅ AUTO-PAIRING SUCCESSFUL:", res);
+          } catch (e) {
+            console.log("ℹ️ Auto-pairing execution result:", e.message || e);
+          }
+        }, 1000);
       }
     });
 
