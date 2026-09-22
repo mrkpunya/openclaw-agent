@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi OAuth 2.0 Client
+// 1. Inisialisasi Google OAuth
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,40 +15,28 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V16 - CLEAN ASYNC GATEWAY AUTO-PAIR...");
+  console.log("🔥 RUNTIME V16 CLEAN - ASYNC GATEWAY RUNNING...");
 
   try {
-    // 2. Refresh Access Token Google OAuth 2.0
+    // 2. Auth Google
     const { token } = await oauth2Client.getAccessToken();
-
-    if (!token) {
-      throw new Error("Gagal mengambil Access Token Google OAuth");
-    }
-
+    if (!token) throw new Error("Gagal OAuth Token");
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Set Environment Variable
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 4. Inisialisasi folder & config dasar
+    // 3. File Config Dasar
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
+    fs.writeFileSync(path.join(openclawDir, 'config.json'), JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2));
 
-    const configPath = path.join(openclawDir, 'config.json');
-    const initialConfig = {
-      onboarded: true,
-      acceptRisk: true,
-      gateway: { mode: "local" }
-    };
-    fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
-
-    // 5. Jalankan Gateway Service di background (Asinkron & Tanpa Flag --config)
+    // 4. Jalankan Gateway (Tanpa flag --config)
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
@@ -56,23 +44,23 @@ async function main() {
       shell: true
     });
 
-    // 6. Tunggu 8 detik sampai HTTP Gateway siap, lalu jalankan pairing approve otomatis
+    // 5. Auto Approval Telegram ID
     setTimeout(() => {
-      console.log("🔓 Executing automatic pairing approval for Telegram ID 8965095104...");
+      console.log("🔓 Executing pairing approval for 8965095104...");
       try {
         const approveResult = execSync(`npx openclaw pairing approve telegram 8965095104`, { encoding: 'utf-8' });
-        console.log("✅ Auto-Pairing Status:", approveResult);
+        console.log("✅ Pairing Result:", approveResult);
       } catch (e) {
-        console.log("ℹ️ Pairing status check completed.");
+        console.log("ℹ️ Pairing status updated.");
       }
     }, 8000);
 
     gatewayProcess.on('exit', (code) => {
-      console.log(`⚠️ Gateway process exited with code ${code}`);
+      console.log(`⚠️ Gateway exited with code ${code}`);
     });
 
   } catch (error) {
-    console.error("❌ Error eksekusi agent:", error);
+    console.error("❌ Error:", error);
   }
 }
 
