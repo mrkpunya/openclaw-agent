@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi Google OAuth
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,10 +14,9 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME V16 CLEAN - ASYNC GATEWAY RUNNING...");
+  console.log("🔥 RUNTIME PAIRING DIRECT - APPROVING CODE RBLZHPCE...");
 
   try {
-    // 2. Auth Google
     const { token } = await oauth2Client.getAccessToken();
     if (!token) throw new Error("Gagal OAuth Token");
     console.log("✅ Google OAuth 2.0 Authenticated!");
@@ -29,14 +27,13 @@ async function main() {
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 3. File Config Dasar
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
     fs.writeFileSync(path.join(openclawDir, 'config.json'), JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2));
 
-    // 4. Jalankan Gateway (Tanpa flag --config)
+    // 1. Jalankan Gateway Service di Background
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
@@ -44,19 +41,19 @@ async function main() {
       shell: true
     });
 
-    // 5. Auto Approval Telegram ID
+    // 2. Eksekusi Approve Kode Pairing RBLZHPCE Setelah Gateway Aktif (Jeda 7 detik)
     setTimeout(() => {
-      console.log("🔓 Executing pairing approval for 8965095104...");
+      console.log("🔓 Approving Telegram Pairing Code RBLZHPCE...");
       try {
-        const approveResult = execSync(`npx openclaw pairing approve telegram 8965095104`, { encoding: 'utf-8' });
-        console.log("✅ Pairing Result:", approveResult);
+        const res = execSync(`npx openclaw pairing approve telegram RBLZHPCE`, { encoding: 'utf-8' });
+        console.log("✅ Pairing Approved Successfully:", res);
       } catch (e) {
-        console.log("ℹ️ Pairing status updated.");
+        console.log("ℹ️ Pairing attempt note:", e.message || e);
       }
-    }, 8000);
+    }, 7000);
 
     gatewayProcess.on('exit', (code) => {
-      console.log(`⚠️ Gateway exited with code ${code}`);
+      console.log(`⚠️ Gateway process exited with code ${code}`);
     });
 
   } catch (error) {
