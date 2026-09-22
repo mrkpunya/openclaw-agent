@@ -14,7 +14,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME PAIRING DIRECT - APPROVING CODE RBLZHPCE...");
+  console.log("🔥 APPROVING PAIRING CODE SQ54G8H2...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -41,16 +41,16 @@ async function main() {
       shell: true
     });
 
-    // 2. Eksekusi Approve Kode Pairing RBLZHPCE Setelah Gateway Aktif (Jeda 7 detik)
+    // 2. Eksekusi Approve Kode Pairing SQ54G8H2 setelah 10 detik
     setTimeout(() => {
-      console.log("🔓 Approving Telegram Pairing Code RBLZHPCE...");
+      console.log("🔓 Approving Telegram Pairing Code SQ54G8H2...");
       try {
-        const res = execSync(`npx openclaw pairing approve telegram RBLZHPCE`, { encoding: 'utf-8' });
+        const res = execSync(`npx openclaw pairing approve telegram SQ54G8H2`, { encoding: 'utf-8' });
         console.log("✅ Pairing Approved Successfully:", res);
       } catch (e) {
         console.log("ℹ️ Pairing attempt note:", e.message || e);
       }
-    }, 7000);
+    }, 10000);
 
     gatewayProcess.on('exit', (code) => {
       console.log(`⚠️ Gateway process exited with code ${code}`);
