@@ -14,7 +14,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 APPROVING PAIRING CODE SQ54G8H2...");
+  console.log("🔥 RUNTIME AUTO-PAIRING PM78LSUS...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -33,24 +33,35 @@ async function main() {
     }
     fs.writeFileSync(path.join(openclawDir, 'config.json'), JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2));
 
-    // 1. Jalankan Gateway Service di Background
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
-      stdio: 'inherit',
       env: process.env,
       shell: true
     });
 
-    // 2. Eksekusi Approve Kode Pairing SQ54G8H2 setelah 10 detik
-    setTimeout(() => {
-      console.log("🔓 Approving Telegram Pairing Code SQ54G8H2...");
-      try {
-        const res = execSync(`npx openclaw pairing approve telegram SQ54G8H2`, { encoding: 'utf-8' });
-        console.log("✅ Pairing Approved Successfully:", res);
-      } catch (e) {
-        console.log("ℹ️ Pairing attempt note:", e.message || e);
+    let approved = false;
+
+    // Pipe stdout & stderr agar tetap terlihat di log Railway
+    gatewayProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      process.stdout.write(output);
+
+      // Eksekusi approval begitu gateway menyatakan "ready"
+      if (!approved && (output.includes('ready') || output.includes('isolated polling ingress started'))) {
+        approved = true;
+        console.log("🔓 Gateway is ready! Approving Telegram Pairing Code PM78LSUS...");
+        try {
+          const res = execSync(`npx openclaw pairing approve telegram PM78LSUS`, { encoding: 'utf-8' });
+          console.log("✅ Pairing Approved Successfully:", res);
+        } catch (e) {
+          console.log("ℹ️ Pairing attempt note:", e.message || e);
+        }
       }
-    }, 10000);
+    });
+
+    gatewayProcess.stderr.on('data', (data) => {
+      process.stderr.write(data.toString());
+    });
 
     gatewayProcess.on('exit', (code) => {
       console.log(`⚠️ Gateway process exited with code ${code}`);
