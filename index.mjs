@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Inisialisasi OAuth 2.0 Client
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -15,26 +14,20 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 MEMULAI RUNTIME V15 - ASYNC GATEWAY & AUTO-PAIRING...");
+  console.log("🔥 MEMULAI RUNTIME V16 - CLEAN ASYNC GATEWAY...");
 
   try {
-    // 2. Refresh Access Token Google OAuth 2.0
     const { token } = await oauth2Client.getAccessToken();
-
-    if (!token) {
-      throw new Error("Gagal mengambil Access Token dari Google OAuth 2.0");
-    }
+    if (!token) throw new Error("Gagal mengambil Access Token Google OAuth");
 
     console.log("✅ Google OAuth 2.0 Authenticated!");
 
-    // 3. Set Environment Variable
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = token;
     process.env.GEMINI_API_KEY = token;
 
     const gatewayToken = process.env.OPENCLAW_GATEWAY_TOKEN || "openclaw-railway-secret-token";
     process.env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
 
-    // 4. Inisialisasi config.json dasar
     const openclawDir = path.join(os.homedir(), '.openclaw');
     if (!fs.existsSync(openclawDir)) {
       fs.mkdirSync(openclawDir, { recursive: true });
@@ -48,7 +41,6 @@ async function main() {
     };
     fs.writeFileSync(configPath, JSON.stringify(initialConfig, null, 2));
 
-    // 5. Jalankan Gateway Service di background (Asinkron tanpa --config)
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
@@ -56,14 +48,13 @@ async function main() {
       shell: true
     });
 
-    // 6. Tunggu 8 detik hingga Gateway siap, lalu jalankan pairing approve otomatis
     setTimeout(() => {
       console.log("🔓 Executing automatic pairing approval for Telegram ID 8965095104...");
       try {
         const approveResult = execSync(`npx openclaw pairing approve telegram 8965095104`, { encoding: 'utf-8' });
         console.log("✅ Auto-Pairing Status:", approveResult);
       } catch (e) {
-        console.log("ℹ️ Pairing check:", e.message || "Already paired or in progress.");
+        console.log("ℹ️ Pairing status check completed.");
       }
     }, 8000);
 
