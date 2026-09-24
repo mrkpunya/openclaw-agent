@@ -1,5 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
-import { spawn, execSync } from 'child_process';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -14,7 +14,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME V18 - CLEANING LOCKS & AUTO-PAIRING...");
+  console.log("🔥 RUNTIME V19 - DIRECT CREDENTIALS INJECTION...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -32,58 +32,43 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 1. BERSIHKAN LOCK LEASE FILE DI PERSISTENT VOLUME
+    // 1. Bersihkan file lock
     try {
       const files = fs.readdirSync(openclawDir);
       files.forEach(file => {
         if (file.endsWith('.lock') || file.includes('lease') || file.includes('pid')) {
-          const lockPath = path.join(openclawDir, file);
-          fs.unlinkSync(lockPath);
-          console.log(`🧹 Removed lingering lock file: ${file}`);
+          fs.unlinkSync(path.join(openclawDir, file));
         }
       });
-    } catch (e) {
-      console.log("ℹ️ No stale locks found or directory clean.");
+    } catch (e) {}
+
+    // 2. SUNTAK PAIRING SEPERTI OWNER RESMI LANGSUNG KE FILE INTERNAL OPENCLAW
+    const telegramPairDir = path.join(openclawDir, 'telegram');
+    if (!fs.existsSync(telegramPairDir)) {
+      fs.mkdirSync(telegramPairDir, { recursive: true });
     }
 
-    // 2. Tulis Config Dasar jika belum ada
-    const configPath = path.join(openclawDir, 'config.json');
-    if (!fs.existsSync(configPath)) {
-      fs.writeFileSync(configPath, JSON.stringify({ onboarded: true, acceptRisk: true, gateway: { mode: "local" } }, null, 2));
-    }
+    const pairedFile = path.join(telegramPairDir, 'paired.json');
+    const allowData = {
+      approved: ["8965095104"],
+      allowFrom: ["8965095104"],
+      users: {
+        "8965095104": {
+          role: "owner",
+          approvedAt: new Date().toISOString()
+        }
+      }
+    };
+
+    fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
+    console.log("📝 DIRECT INJECTION COMPLETE: Telegram ID 8965095104 registered as permanent owner.");
 
     // 3. Jalankan Gateway
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
+      stdio: 'inherit',
       env: process.env,
       shell: true
-    });
-
-    let approved = false;
-
-    // 4. Deteksi & Auto-Approve Kode Pairing
-    gatewayProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      process.stdout.write(output);
-
-      const match = output.match(/openclaw pairing approve telegram ([A-Z0-9]+)/i);
-      if (match && match[1] && !approved) {
-        approved = true;
-        const code = match[1];
-        console.log(`\n🔓 AUTO-DETECTED CODE: ${code}. Executing approval...`);
-        setTimeout(() => {
-          try {
-            const res = execSync(`npx openclaw pairing approve telegram ${code}`, { encoding: 'utf-8' });
-            console.log("✅ PAIRING SUCCESSFUL & SAVED TO VOLUME:", res);
-          } catch (e) {
-            console.log("ℹ️ Approval note:", e.message || e);
-          }
-        }, 1000);
-      }
-    });
-
-    gatewayProcess.stderr.on('data', (data) => {
-      process.stderr.write(data.toString());
     });
 
     gatewayProcess.on('exit', (code) => {
