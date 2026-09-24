@@ -32,17 +32,27 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 1. Bersihkan file lock
+    // 1. SAPU BERSIH SEMUA FILE LOCK & LEASE
     try {
-      const files = fs.readdirSync(openclawDir);
-      files.forEach(file => {
-        if (file.endsWith('.lock') || file.includes('lease') || file.includes('pid')) {
-          fs.unlinkSync(path.join(openclawDir, file));
+      const deleteLocksRecursively = (dirPath) => {
+        if (!fs.existsSync(dirPath)) return;
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            deleteLocksRecursively(fullPath);
+          } else if (entry.name.endsWith('.lock') || entry.name.includes('lease') || entry.name.includes('pid')) {
+            fs.unlinkSync(fullPath);
+            console.log(`🧹 Removed lock file: ${entry.name}`);
+          }
         }
-      });
-    } catch (e) {}
+      };
+      deleteLocksRecursively(openclawDir);
+    } catch (e) {
+      console.log("ℹ️ Lock cleanup note:", e.message);
+    }
 
-    // 2. SUNTAK PAIRING SEPERTI OWNER RESMI LANGSUNG KE FILE INTERNAL OPENCLAW
+    // 2. INJEKSI PERMANEN TELEGRAM ID 8965095104 KE FILE PAIRING INTERNAL
     const telegramPairDir = path.join(openclawDir, 'telegram');
     if (!fs.existsSync(telegramPairDir)) {
       fs.mkdirSync(telegramPairDir, { recursive: true });
@@ -63,7 +73,7 @@ async function main() {
     fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
     console.log("📝 DIRECT INJECTION COMPLETE: Telegram ID 8965095104 registered as permanent owner.");
 
-    // 3. Jalankan Gateway
+    // 3. Jalankan Gateway Service
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
