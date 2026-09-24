@@ -4,6 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// Terapkan batasan alokasi V8 Heap Memory agar tidak menyentuh limit Railway OOM
+process.env.NODE_OPTIONS = "--max-old-space-size=384";
+
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET
@@ -14,7 +17,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME V19 - DIRECT CREDENTIALS INJECTION...");
+  console.log("🔥 RUNTIME V20 - LOW-MEMORY & DIRECT OWNER INJECTION...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -32,7 +35,7 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 1. SAPU BERSIH SEMUA FILE LOCK & LEASE
+    // 1. Bersihkan file lock jika ada
     try {
       const deleteLocksRecursively = (dirPath) => {
         if (!fs.existsSync(dirPath)) return;
@@ -43,16 +46,13 @@ async function main() {
             deleteLocksRecursively(fullPath);
           } else if (entry.name.endsWith('.lock') || entry.name.includes('lease') || entry.name.includes('pid')) {
             fs.unlinkSync(fullPath);
-            console.log(`🧹 Removed lock file: ${entry.name}`);
           }
         }
       };
       deleteLocksRecursively(openclawDir);
-    } catch (e) {
-      console.log("ℹ️ Lock cleanup note:", e.message);
-    }
+    } catch (e) {}
 
-    // 2. INJEKSI PERMANEN TELEGRAM ID 8965095104 KE FILE PAIRING INTERNAL
+    // 2. INJEKSI DIRECT PAIRING TELEGRAM ID 8965095104
     const telegramPairDir = path.join(openclawDir, 'telegram');
     if (!fs.existsSync(telegramPairDir)) {
       fs.mkdirSync(telegramPairDir, { recursive: true });
@@ -69,9 +69,8 @@ async function main() {
         }
       }
     };
-
     fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
-    console.log("📝 DIRECT INJECTION COMPLETE: Telegram ID 8965095104 registered as permanent owner.");
+    console.log("📝 TELEGRAM OWNER INJECTED: ID 8965095104 registered.");
 
     // 3. Jalankan Gateway Service
     console.log("⚡ Starting OpenClaw Gateway Service...");
