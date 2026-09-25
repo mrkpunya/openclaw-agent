@@ -4,8 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Batasi Heap RAM Node.js agar tidak menyentuh limit OOM Railway (512MB)
-process.env.NODE_OPTIONS = "--max-old-space-size=384";
+// 1. Batasi Heap Memory Node.js khusus untuk Railway Free Plan (256MB Limit)
+process.env.NODE_OPTIONS = "--max-old-space-size=256";
+
+// Disable plugin/sidecar berat yang memicu OOM
+process.env.OPENCLAW_DISABLE_PLUGINS = "browser,canvas,ollama,cua-computer,talk-voice";
 
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -17,7 +20,7 @@ oauth2Client.setCredentials({
 });
 
 async function main() {
-  console.log("🔥 RUNTIME V20 - LOW-MEMORY & DIRECT OWNER INJECTION...");
+  console.log("🔥 RUNTIME V21 - ULTRA LOW MEMORY FOR RAILWAY FREE...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -35,7 +38,7 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 2. Hapus file lock untuk mencegah startup crash
+    // 2. Sapu bersih file lock
     try {
       const deleteLocksRecursively = (dirPath) => {
         if (!fs.existsSync(dirPath)) return;
@@ -52,7 +55,7 @@ async function main() {
       deleteLocksRecursively(openclawDir);
     } catch (e) {}
 
-    // 3. Injeksi Otorisasi Telegram Owner ID 8965095104
+    // 3. Injeksi Otorisasi Permanent Owner Telegram ID 8965095104
     const telegramPairDir = path.join(openclawDir, 'telegram');
     if (!fs.existsSync(telegramPairDir)) {
       fs.mkdirSync(telegramPairDir, { recursive: true });
@@ -70,9 +73,9 @@ async function main() {
       }
     };
     fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
-    console.log("📝 TELEGRAM OWNER INJECTED: ID 8965095104 registered.");
+    console.log("📝 DIRECT INJECTION COMPLETE: Telegram ID 8965095104 saved to volume.");
 
-    // 4. Jalankan Gateway Service
+    // 4. Eksekusi Gateway OpenClaw
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
