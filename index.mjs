@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// Terapkan batasan alokasi V8 Heap Memory agar tidak menyentuh limit Railway OOM
+// 1. Batasi Heap RAM Node.js agar tidak menyentuh limit OOM Railway (512MB)
 process.env.NODE_OPTIONS = "--max-old-space-size=384";
 
 const oauth2Client = new OAuth2Client(
@@ -35,7 +35,7 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 1. Bersihkan file lock jika ada
+    // 2. Hapus file lock untuk mencegah startup crash
     try {
       const deleteLocksRecursively = (dirPath) => {
         if (!fs.existsSync(dirPath)) return;
@@ -52,7 +52,7 @@ async function main() {
       deleteLocksRecursively(openclawDir);
     } catch (e) {}
 
-    // 2. INJEKSI DIRECT PAIRING TELEGRAM ID 8965095104
+    // 3. Injeksi Otorisasi Telegram Owner ID 8965095104
     const telegramPairDir = path.join(openclawDir, 'telegram');
     if (!fs.existsSync(telegramPairDir)) {
       fs.mkdirSync(telegramPairDir, { recursive: true });
@@ -72,7 +72,7 @@ async function main() {
     fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
     console.log("📝 TELEGRAM OWNER INJECTED: ID 8965095104 registered.");
 
-    // 3. Jalankan Gateway Service
+    // 4. Jalankan Gateway Service
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
