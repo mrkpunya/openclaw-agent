@@ -4,11 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-// 1. Batasi Heap Memory Node.js khusus untuk Railway Free Plan (256MB Limit)
-process.env.NODE_OPTIONS = "--max-old-space-size=256";
-
-// Disable plugin/sidecar berat yang memicu OOM
-process.env.OPENCLAW_DISABLE_PLUGINS = "browser,canvas,ollama,cua-computer,talk-voice";
+// Batasi Heap Node.js ke 384MB agar tidak melebihi RAM Railway Free (512MB)
+process.env.NODE_OPTIONS = "--max-old-space-size=384";
 
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -19,8 +16,30 @@ oauth2Client.setCredentials({
   refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 });
 
+// Fungsi pembersih lock/lease rekursif
+function purgeLocks(dir) {
+  if (!fs.existsSync(dir)) return;
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      purgeLocks(fullPath);
+    } else if (
+      item.name.endsWith('.lock') || 
+      item.name.includes('lease') || 
+      item.name.includes('pid') ||
+      item.name.endsWith('.bak')
+    ) {
+      try {
+        fs.unlinkSync(fullPath);
+        console.log(`🧹 Purged stale lock/lease: ${item.name}`);
+      } catch (e) {}
+    }
+  }
+}
+
 async function main() {
-  console.log("🔥 RUNTIME V21 - ULTRA LOW MEMORY FOR RAILWAY FREE...");
+  console.log("🔥 RUNTIME V22 - PURGE LEASES & DIRECT OWNER BINDING...");
 
   try {
     const { token } = await oauth2Client.getAccessToken();
@@ -38,24 +57,11 @@ async function main() {
       fs.mkdirSync(openclawDir, { recursive: true });
     }
 
-    // 2. Sapu bersih file lock
-    try {
-      const deleteLocksRecursively = (dirPath) => {
-        if (!fs.existsSync(dirPath)) return;
-        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-        for (const entry of entries) {
-          const fullPath = path.join(dirPath, entry.name);
-          if (entry.isDirectory()) {
-            deleteLocksRecursively(fullPath);
-          } else if (entry.name.endsWith('.lock') || entry.name.includes('lease') || entry.name.includes('pid')) {
-            fs.unlinkSync(fullPath);
-          }
-        }
-      };
-      deleteLocksRecursively(openclawDir);
-    } catch (e) {}
+    // 1. SAPU BERSIH SELURUH FILE LEASE/LOCK DARI RUNTIME SEBELUMNYA
+    console.log("🧼 Cleaning stale gateway locks and active owner leases...");
+    purgeLocks(openclawDir);
 
-    // 3. Injeksi Otorisasi Permanent Owner Telegram ID 8965095104
+    // 2. INJEKSI OTORISASI TELEGRAM OWNER ID 8965095104
     const telegramPairDir = path.join(openclawDir, 'telegram');
     if (!fs.existsSync(telegramPairDir)) {
       fs.mkdirSync(telegramPairDir, { recursive: true });
@@ -73,9 +79,9 @@ async function main() {
       }
     };
     fs.writeFileSync(pairedFile, JSON.stringify(allowData, null, 2));
-    console.log("📝 DIRECT INJECTION COMPLETE: Telegram ID 8965095104 saved to volume.");
+    console.log("📝 TELEGRAM OWNER INJECTED: ID 8965095104 saved to volume.");
 
-    // 4. Eksekusi Gateway OpenClaw
+    // 3. JALANKAN GATEWAY
     console.log("⚡ Starting OpenClaw Gateway Service...");
     const gatewayProcess = spawn('npx', ['openclaw', 'gateway', 'run', '--allow-unconfigured', '--token', gatewayToken], {
       stdio: 'inherit',
